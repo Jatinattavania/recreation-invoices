@@ -55,10 +55,13 @@ test('an uploaded QR is read, redrawn cleanly and carries the amount', async ({ 
   expect((await store(page, 'settings')).payQRData).toBe(UPI_QR);
   expect(await invoiceQR(page)).toBe(`${UPI_QR}&am=183000.00&cu=INR&tn=RCS-0001`);
 
+  const before = await page.locator('.inv .qr').getAttribute('src');
   await page.locator('[data-k="qty"]').nth(0).click();
   await page.keyboard.type('2'); await page.keyboard.press('Tab');
   await expect(page.locator('.inv [data-c="total"]').first()).toHaveText('₹ 2,28,000.00');
-  await expect.poll(() => invoiceQR(page)).toContain('am=228000.00');
+  // Wait for the redraw (cheap), then read it once: decoding is slow on a busy machine.
+  await expect.poll(() => page.locator('.inv .qr').getAttribute('src')).not.toBe(before);
+  expect(await invoiceQR(page)).toContain('am=228000.00');
 });
 
 test('a QR uploaded before this feature is cleaned up on load', async ({ page }) => {
