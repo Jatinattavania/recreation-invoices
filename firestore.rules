@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Each person signed in with Google can read and write only their own data,
+// stored under users/{their user id}. Nobody can see anyone else's.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

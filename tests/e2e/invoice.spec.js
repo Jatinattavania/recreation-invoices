@@ -11,6 +11,17 @@ test('sample invoice totals, words and no GST', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('signed out: offers sign-in and never contacts the cloud', async ({ page }) => {
+  const cloudCalls = [];
+  page.on('request', r => { if (/googleapis|firebase|gstatic/.test(r.url())) cloudCalls.push(r.url()); });
+  const errors = await openApp(page, { settings: ME });
+  await expect(page.locator('#tSync')).toHaveText('Sign in to sync');
+  await expect(page.locator('#tSync')).toHaveAttribute('data-state', 'off');
+  await page.waitForTimeout(500);
+  expect(cloudCalls).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test('first run starts with an empty invoice', async ({ page }) => {
   const errors = await openApp(page, { fresh: true, settings: ME });
   expect(await total(page)).toBe('₹ 0.00');

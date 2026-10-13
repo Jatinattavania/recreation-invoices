@@ -28,6 +28,7 @@ import './pdf.js';
 import './services.js';
 import './settings.js';
 import './share.js';
+import './sync.js';
 import { BRAND } from './brand.js';
 import { convertQuote, duplicate, newDocument, save } from './actions.js';
 import { setSideTab } from './clients.js';

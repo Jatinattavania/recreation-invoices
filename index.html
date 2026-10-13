@@ -40,6 +40,17 @@
     <div class="grow"></div>
     <div class="seg" id="tplSeg" role="group" aria-label="Design"></div>
     <div class="swatches" id="swatches" role="group" aria-label="Colour"></div>
+    <div class="menu-wrap">
+      <button class="btn sync-btn" id="tSync" aria-haspopup="menu" aria-expanded="false" data-state="off">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.5 12.5h7a3 3 0 0 0 .4-6A4.2 4.2 0 0 0 3.8 7.3a2.6 2.6 0 0 0 .7 5.2z"/></svg><span id="syncLabel">Sign in to sync</span><i class="sync-dot"></i>
+      </button>
+      <div class="menu" id="syncMenu" role="menu" hidden>
+        <p class="menu-note" id="syncWho"></p>
+        <button type="button" role="menuitem" data-sync="now"><b>Sync now</b><span>Upload anything still waiting</span></button>
+        <button type="button" role="menuitem" data-sync="out"><b>Sign out</b><span>Your data stays in this browser</span></button>
+        <button type="button" role="menuitem" data-sync="clear"><b>Sign out and clear this browser</b><span>For a shared computer — it all stays in your account</span></button>
+      </div>
+    </div>
     <button class="btn" id="tMe" title="Your business and bank details, printed on every invoice">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.5 14c.8-2.8 3-4.2 5.5-4.2s4.7 1.4 5.5 4.2"/></svg>My details<i class="badge-dot" id="meDot" hidden></i>
     </button>

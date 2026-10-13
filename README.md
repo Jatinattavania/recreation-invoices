@@ -20,6 +20,17 @@ Live at **https://jatinattavania.github.io/recreation-invoices/**. Every push to
 
 The hosted site and `localhost:8080` each keep their own saved data. To move your invoices across, use **Settings → Backups → Download a backup file** on one, then **Restore from a backup file** on the other.
 
+## Sync
+
+Click **Sign in to sync** in the toolbar and sign in with Google. Your invoices, quotes, clients, services and details are then kept in your Firebase account (project `recreation-invoices`), and appear on every device and browser where you sign in. Each browser still keeps its own full copy, so the app works offline and catches up when it's back online.
+
+- The first sign-in on a browser merges what's there with what's in your account; nothing is thrown away.
+- If the same invoice was changed in two places while offline, the most recent change wins. Numbering never goes backwards.
+- **Sign out and clear this browser** (in the sync menu) is for a shared computer: it removes the data from that browser only.
+- Anyone can sign in to the hosted site, but each person only ever sees their own data.
+
+The access rules are in `firestore.rules`. To change them, paste the file into Firebase console → Firestore Database → **Rules** and click **Publish**.
+
 ## Keeping your data safe
 
 - **Settings → Backups → Choose backup folder** (Chrome/Edge): every change is saved to that folder as `recreation-invoices-latest.json`, plus one dated copy per day. Pick a folder synced to Google Drive or OneDrive.
@@ -43,6 +54,7 @@ The hosted site and `localhost:8080` each keep their own saved data. To move you
 | `src/me.js` · `src/settings.js` | My details (your business, bank, logo, QR) and Settings. |
 | `src/pdf.js` · `src/share.js` · `src/qr.js` | PDF export, WhatsApp/email/share, UPI QR codes. |
 | `src/backup.js` | Backup files, folder backups, the pre-update copy, restoring. |
+| `src/sync.js` · `src/sync-engine.js` · `src/cloud.js` | Sync: the toolbar button, the merge logic (tested on its own), and Firebase. |
 | `src/styles/app.css` · `src/styles/invoice.css` | App styles, and invoice-page styles (what prints). |
 | `tests/unit` · `tests/e2e` | Vitest checks for formatting, Playwright checks of the whole app in Chrome. |
 
