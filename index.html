@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoices — ReCreation Studio</title>
+<link rel="icon" id="favicon" href="data:,">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="btn btn--ghost btn--icon" id="tHist" title="Toggle invoice list" aria-label="Toggle invoice list">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><path d="M6 2.5v11"/></svg>
+    </button>
+    <div class="brand"><img id="brandMark" alt=""><div><b>Invoices</b> <span>ReCreation Studio</span></div></div>
+    <span class="divider"></span>
+    <div class="tgroup">
+      <div class="menu-wrap">
+        <button class="btn" id="tNew" aria-haspopup="menu" aria-expanded="false"><svg width="13" height="13" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M7 2v10M2 7h10"/></svg>New<svg class="caret" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3.5l3 3 3-3"/></svg></button>
+        <div class="menu" id="newMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-new="invoice"><b>Invoice</b><span>Bill a client</span></button>
+          <button type="button" role="menuitem" data-new="quote"><b>Quote</b><span>Send a price before the work</span></button>
+        </div>
+      </div>
+      <button class="btn" id="tSave" title="Save (Ctrl+S)">Save</button>
+      <button class="btn" id="tDup">Duplicate</button>
+      <button class="btn btn--ghost" id="tPrint" title="Print, or Save as PDF from the print dialog for selectable text">Print</button>
+      <div class="menu-wrap">
+        <button class="btn" id="tShare" aria-haspopup="menu" aria-expanded="false"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="3" r="1.8"/><circle cx="3.5" cy="7" r="1.8"/><circle cx="10.5" cy="11" r="1.8"/><path d="M5.1 6.1l3.8-2.2M5.1 7.9l3.8 2.2"/></svg>Share<svg class="caret" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3.5l3 3 3-3"/></svg></button>
+        <div class="menu" id="shareMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-share="whatsapp"><b>WhatsApp</b><span>Message the client + download the PDF</span></button>
+          <button type="button" role="menuitem" data-share="email"><b>Email</b><span>Open an email + download the PDF</span></button>
+          <button type="button" role="menuitem" data-share="sheet"><b>Share PDF…</b><span>Send the file with any app</span></button>
+          <button type="button" role="menuitem" data-share="copy"><b>Copy payment details</b><span>Amount, UPI and bank, ready to paste</span></button>
+        </div>
+      </div>
+      <button class="btn btn--primary" id="tPdf"><svg width="13" height="13" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M7 2v7M4 6.5L7 9.5l3-3M2.5 12h9"/></svg>Download PDF</button>
+    </div>
+    <span class="savestate" id="saveState"></span>
+    <div class="grow"></div>
+    <div class="seg" id="tplSeg" role="group" aria-label="Design"></div>
+    <div class="swatches" id="swatches" role="group" aria-label="Colour"></div>
+    <button class="btn" id="tMe" title="Your business and bank details, printed on every invoice">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.5 14c.8-2.8 3-4.2 5.5-4.2s4.7 1.4 5.5 4.2"/></svg>My details<i class="badge-dot" id="meDot" hidden></i>
+    </button>
+    <button class="btn btn--ghost btn--icon" id="tSettings" title="Settings" aria-label="Settings">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4"/></svg>
+    </button>
+  </header>
+
+  <div class="main">
+    <aside class="side card-panel" id="side" aria-label="Invoices and clients">
+      <div class="side-head">
+        <div class="seg side-tabs" id="sideTabs" role="tablist">
+          <button type="button" data-tab="invoices" role="tab">Invoices</button><button type="button" data-tab="clients" role="tab">Clients</button><button type="button" data-tab="services" role="tab">Services</button>
+        </div>
+        <button class="btn btn--ghost btn--sm" id="hClose">Hide</button>
+      </div>
+      <div class="pane" id="paneInvoices" data-pane="invoices">
+        <div class="backup-nudge" id="backupNudge" hidden></div>
+        <div class="h-sum" id="hSum"></div>
+        <input class="inp search" id="hSearch" type="search" placeholder="Search number, client, project" aria-label="Search invoices and quotes">
+        <div class="seg seg--full doc-filter" id="docFilter" role="group" aria-label="Show">
+          <button type="button" data-filter="all">All</button><button type="button" data-filter="invoice">Invoices</button><button type="button" data-filter="quote">Quotes</button>
+        </div>
+        <div class="h-list" id="hList"></div>
+      </div>
+      <div class="pane" id="paneClients" data-pane="clients" hidden>
+        <div class="side-tools">
+          <input class="inp search" id="cSearch" type="search" placeholder="Search clients" aria-label="Search clients">
+          <button class="btn btn--primary btn--sm" type="button" id="cAdd">+ Add client</button>
+        </div>
+        <div class="h-list" id="cList"></div>
+      </div>
+      <div class="pane" id="paneServices" data-pane="services" hidden>
+        <div class="side-tools">
+          <input class="inp search" id="sSearch" type="search" placeholder="Search services" aria-label="Search services">
+          <button class="btn btn--primary btn--sm" type="button" id="sAdd">+ Add service</button>
+        </div>
+        <div class="h-list" id="sList"></div>
+      </div>
+    </aside>
+
+    <section class="stage" id="stage">
+      <div class="holder" id="holder"><div class="frame" id="pageFrame"></div></div>
+    </section>
+
+    <aside class="insp card-panel" id="insp" aria-label="Invoice options">
+      <section>
+        <span class="kicker">Your details</span>
+        <div class="me-card" id="meCard"></div>
+        <div id="meMissing"></div>
+        <button class="btn btn--sm" type="button" data-open-me style="margin-top:10px">Edit my details</button>
+      </section>
+      <section>
+        <span class="kicker">Client</span>
+        <div class="cl-current" id="clCurrent"></div>
+        <div class="cl-btns">
+          <button class="btn btn--primary btn--sm" type="button" data-pick-client>Choose client</button>
+          <button class="btn btn--sm" type="button" id="clSave">Save as client</button>
+        </div>
+        <div class="cl-row" style="margin-top:14px">
+          <div class="cl-prev" id="clPrev"></div>
+          <div class="cl-btns">
+            <button class="btn btn--sm" type="button" data-cl-add>Upload logo</button>
+            <button class="btn btn--ghost btn--sm btn--danger" type="button" data-cl-remove id="clRemove">Remove</button>
+          </div>
+        </div>
+      </section>
+      <section>
+        <span class="kicker">Status</span>
+        <div class="seg seg--full" id="statusSeg" data-seg="status"></div>
+      </section>
+      <section id="quoteSection" hidden>
+        <span class="kicker">Quote</span>
+        <p class="hint">When the client says yes, turn this quote into an invoice. Everything carries over and the invoice gets the next invoice number.</p>
+        <button class="btn btn--primary btn--sm" type="button" id="convertQuote" style="margin-top:10px">Convert to invoice</button>
+      </section>
+      <section id="paySection">
+        <span class="kicker">Payments</span>
+        <div class="pay-sum" id="paySum"></div>
+        <div class="pay-list" id="payList"></div>
+        <p class="pay-done" id="payDone" hidden></p>
+        <form class="pay-form" id="payForm">
+          <div class="row2">
+            <label class="field"><span>Amount (₹)</span><input class="inp" type="number" id="payAmt" min="0" step="0.01"></label>
+            <label class="field"><span>Date</span><input class="inp" type="date" id="payDate"></label>
+          </div>
+          <label class="field"><span>Note (optional)</span><input class="inp" id="payNote" placeholder="UPI, bank transfer, cash…"></label>
+          <button class="btn btn--sm" type="submit">Record payment</button>
+        </form>
+      </section>
+      <section>
+        <span class="kicker">Dates</span>
+        <label class="field"><span>Issued</span><input class="inp" type="date" data-bind="issueDate"></label>
+        <label class="field"><span id="termsLbl">Payment terms</span>
+          <select class="inp" data-bind="terms">
+            <option value="0">Due on receipt</option><option value="7">7 days</option><option value="15">15 days</option>
+            <option value="30">30 days</option><option value="45">45 days</option><option value="custom" hidden>Custom date</option>
+          </select>
+        </label>
+        <label class="field" style="margin-bottom:0"><span id="dueLbl">Due</span><input class="inp" type="date" data-bind="dueDate"></label>
+      </section>
+      <section id="taxSection">
+        <span class="kicker">GST</span>
+        <label class="field"><span>GST %</span><input class="inp" type="number" min="0" step="0.01" data-bind="taxRate"></label>
+        <div class="seg seg--full" data-seg="taxMode">
+          <button data-val="split" title="Intra-state">CGST+SGST</button><button data-val="igst" title="Inter-state">IGST</button><button data-val="none">None</button>
+        </div>
+      </section>
+      <section>
+        <span class="kicker">Discount</span>
+        <div class="seg seg--full" data-seg="discount.type" style="margin-bottom:10px">
+          <button data-val="none">None</button><button data-val="flat">₹ Flat</button><button data-val="pct">%</button>
+        </div>
+        <label class="field" style="margin-bottom:0"><span id="discLbl">Amount</span><input class="inp" type="number" min="0" step="0.01" data-bind="discount.value"></label>
+      </section>
+      <section>
+        <span class="kicker">Summary</span>
+        <div class="mini-totals" id="miniTotals"></div>
+        <div id="overflowWarn"></div>
+      </section>
+      <section>
+        <span class="kicker">Tips</span>
+        <p class="hint">Click any text on the invoice to edit it. <kbd>Tab</kbd> moves between cells, <kbd>Enter</kbd> on the last row adds a line, <kbd>Alt</kbd>+<kbd>↑</kbd><kbd>↓</kbd> or the handle on the left reorders. Press ★ on a line to save it as a service. Your business and bank details are in My details. <kbd>Ctrl</kbd>+<kbd>S</kbd> saves.</p>
+      </section>
+    </aside>
+  </div>
+  <div class="scrim" id="scrim"></div>
+</div>
+
+<dialog class="modal" id="settingsDlg" aria-labelledby="setTitle">
+  <form method="dialog" id="settingsForm">
+    <div class="m-head"><h2 id="setTitle">Settings</h2><button class="btn btn--ghost btn--sm" type="button" data-close>Close</button></div>
+    <div class="m-body" id="settingsBody"></div>
+    <div class="m-foot">
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <button class="btn" type="button" data-close>Cancel</button>
+        <button class="btn btn--primary" type="button" id="bSaveSettings">Save settings</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="modal" id="meDlg" aria-labelledby="meTitle">
+  <div class="m-head">
+    <div><h2 id="meTitle">My details</h2><p class="hint" style="margin:3px 0 0">Printed the same way on every invoice. Edit them here whenever something changes.</p></div>
+    <button class="btn btn--ghost btn--sm" type="button" data-close>Close</button>
+  </div>
+  <div class="m-body" id="meBody"></div>
+  <div class="m-foot">
+    <span class="hint" style="align-self:center">Changes apply to every invoice, including saved ones.</span>
+    <div style="display:flex;gap:6px;margin-left:auto">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn btn--primary" type="button" id="meSave">Save my details</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="modal dlg-sm" id="clientDlg" aria-labelledby="clientDlgTitle">
+  <div class="m-head"><h2 id="clientDlgTitle">New client</h2><button class="btn btn--ghost btn--sm" type="button" data-close>Close</button></div>
+  <div class="m-body">
+    <div class="m-sec">
+      <div class="logo-row">
+        <span class="h-av h-av--lg" id="cdAv"></span>
+        <button class="btn btn--sm" type="button" id="cdLogo">Upload logo</button>
+        <button class="btn btn--ghost btn--sm btn--danger" type="button" id="cdLogoRm">Remove logo</button>
+        <input type="file" id="cdLogoFile" accept="image/png,image/svg+xml,image/jpeg,image/webp" hidden>
+      </div>
+      <div class="m-grid" style="margin-top:16px" id="cdFields"></div>
+    </div>
+  </div>
+  <div class="m-foot">
+    <button class="btn btn--ghost btn--sm btn--danger" type="button" id="cdDelete">Delete client</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
+      <button class="btn" type="button" id="cdInvoice">New invoice for client</button>
+      <button class="btn btn--primary" type="button" id="cdSave">Save client</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="modal dlg-sm" id="pickDlg" aria-labelledby="pickTitle">
+  <div class="m-head"><h2 id="pickTitle">Choose a client</h2><button class="btn btn--ghost btn--sm" type="button" data-close>Close</button></div>
+  <div class="m-body" style="padding-top:16px">
+    <input class="inp" id="pickSearch" type="search" placeholder="Search clients" aria-label="Search clients">
+    <div class="picker-list" id="pickList"></div>
+  </div>
+  <div class="m-foot">
+    <span class="hint" style="align-self:center">Fills the invoice with the client's details.</span>
+    <button class="btn btn--sm" type="button" id="pickNew">+ New client</button>
+  </div>
+</dialog>
+
+<dialog class="modal dlg-sm" id="svcDlg" aria-labelledby="svcTitle">
+  <div class="m-head"><h2 id="svcTitle">New service</h2><button class="btn btn--ghost btn--sm" type="button" data-close>Close</button></div>
+  <div class="m-body"><div class="m-sec"><div class="m-grid">
+    <label class="field wide"><span>Service</span><input class="inp" data-sf="desc" placeholder="e.g. Logo design"></label>
+    <label class="field wide"><span>Details (optional)</span><input class="inp" data-sf="sub" placeholder="e.g. 3 concepts, 2 rounds of revisions"></label>
+    <label class="field"><span>Price (₹)</span><input class="inp" data-sf="rate" type="number" min="0" step="0.01" placeholder="0.00"></label>
+  </div></div></div>
+  <div class="m-foot">
+    <button class="btn btn--ghost btn--sm btn--danger" type="button" id="svcDelete">Delete service</button>
+    <button class="btn btn--primary" type="button" id="svcSave" style="margin-left:auto">Save service</button>
+  </div>
+</dialog>
+
+<dialog class="modal dlg-sm" id="svcPick" aria-labelledby="svcPickTitle">
+  <div class="m-head"><h2 id="svcPickTitle">Add a saved service</h2><button class="btn btn--ghost btn--sm" type="button" data-close>Close</button></div>
+  <div class="m-body" style="padding-top:16px">
+    <input class="inp" id="svcPickSearch" type="search" placeholder="Search services" aria-label="Search services">
+    <div class="picker-list" id="svcPickList"></div>
+  </div>
+  <div class="m-foot">
+    <span class="hint" style="align-self:center">Adds it as a new line on the invoice.</span>
+    <button class="btn btn--sm" type="button" id="svcPickNew">+ New service</button>
+  </div>
+</dialog>
+
+<input type="file" id="clientLogoFile" accept="image/png,image/svg+xml,image/jpeg,image/webp" hidden>
+<input type="date" id="datePicker" tabindex="-1" aria-hidden="true">
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="busy" id="busy">Preparing your PDF…</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
