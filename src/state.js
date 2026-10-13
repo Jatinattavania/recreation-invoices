@@ -74,7 +74,7 @@ export const serialText = () => S.cur.number || peekSerial();
 /* ---------- invoice model ---------- */
 export const newItem = (o = {}) => ({ id: uid(), desc: '', sub: '', qty: 1, rate: 0, ...o });
 export const defaultAccents = () => Object.fromEntries(Object.entries(TEMPLATES).map(([k, v]) => [k, v.swatches[0]]));
-export function newInvoice(sample = false, kind = 'invoice') {
+export function newInvoice(kind = 'invoice') {
   const quote = kind === 'quote';
   const issue = todayISO(), terms = quote ? +S.settings.quoteValidDays || 30 : +S.settings.defaultTerms || 0;
   const inv = {
@@ -94,19 +94,10 @@ export function newInvoice(sample = false, kind = 'invoice') {
     paidDate: '', quoteRef: '',
     createdAt: Date.now(), updatedAt: Date.now(),
   };
-  if (sample) {
-    inv.client = { name: 'Aarav Mehta', company: 'Northwind Foods Pvt. Ltd.', address: '4th Floor, Prestige Meridian\nMG Road, Bengaluru 560001', gstin: '', logo: '' };
-    inv.project = { title: 'Website redesign', desc: 'Brand-led redesign of the marketing site, from research through launch.' };
-    inv.items = [
-      newItem({ desc: 'Discovery & UX research', sub: 'Stakeholder interviews, competitor audit, user flows', qty: 1, rate: 45000 }),
-      newItem({ desc: 'UI design — marketing website', sub: 'Responsive screens and a Figma design system', qty: 12, rate: 6500 }),
-      newItem({ desc: 'Webflow development', sub: 'CMS setup, interactions, launch support', qty: 1, rate: 60000 }),
-    ];
-  }
   return inv;
 }
 export function migrate(inv) {
-  const m = merge(newInvoice(false, inv.kind === 'quote' ? 'quote' : 'invoice'), inv);
+  const m = merge(newInvoice(inv.kind === 'quote' ? 'quote' : 'invoice'), inv);
   if (!TEMPLATES[m.template]) m.template = S.settings.defaultTemplate;   // earlier designs no longer exist
   const acc = {};
   for (const [k, v] of Object.entries(m.accents || {})) if (TEMPLATES[k] && isHex(v)) acc[k] = v;

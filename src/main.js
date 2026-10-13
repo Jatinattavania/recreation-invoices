@@ -38,7 +38,7 @@ import { applyHistoryState, renderAll } from './panels.js';
 import { downloadPDF, printInvoice } from './pdf.js';
 import { decodeQR, upiParam } from './qr.js';
 import { openSettings } from './settings.js';
-import { S, gstOn, migrate, newInvoice, ui } from './state.js';
+import { S, gstOn, migrate, newInvoice, newItem, ui } from './state.js';
 import { setupMenu, toast } from './ui.js';
 import { $, LS, clone } from './util.js';
 
@@ -57,9 +57,19 @@ addEventListener('keydown', e => {
    BOOT
    ===================================================================== */
 export const working = LS.get('working', null);
-if (working?.inv) { S.cur = migrate(working.inv); S.dirty = !!working.dirty; }
+if (working?.inv) { S.cur = migrate(working.inv); S.dirty = !!working.dirty; dropSample(S.cur); }
 else if (S.invoices.length) { S.cur = migrate(clone([...S.invoices].sort((a, b) => b.createdAt - a.createdAt)[0])); }
-else { S.cur = newInvoice(true); }
+else { S.cur = newInvoice(); }
+// Earlier versions opened with a filled-in example. Clear its project and untouched
+// example lines from an unsaved draft, keeping anything you changed or added.
+function dropSample(inv) {
+  if (inv.number) return;
+  const EXAMPLE = { 'Discovery & UX research': 45000, 'UI design — marketing website': 6500, 'Webflow development': 60000 };
+  const items = inv.items.filter(it => EXAMPLE[it.desc] !== +it.rate);
+  if (inv.client?.company === 'Northwind Foods Pvt. Ltd.' && inv.client.name === 'Aarav Mehta' && inv.client.address?.startsWith('4th Floor, Prestige Meridian') && !inv.clientId) inv.client = { ...inv.client, name: '', company: '', address: '' };
+  if (inv.project?.title === 'Website redesign' && inv.project.desc?.startsWith('Brand-led redesign')) inv.project = { title: '', desc: '' };
+  if (items.length !== inv.items.length) inv.items = items.length ? items : [newItem()];
+}
 // GST is off: an unsaved draft drops its tax. Saved invoices keep what they were issued with.
 if (!gstOn() && !S.cur.number) S.cur.taxMode = 'none';
 

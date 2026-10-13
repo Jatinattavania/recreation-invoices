@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ME, newDoc, openApp, save, status, store, total, typeInto } from './helpers.js';
+import { ME, SAMPLE, newDoc, openApp, save, status, store, total, typeInto } from './helpers.js';
 
 test('sample invoice totals, words and no GST', async ({ page }) => {
   const errors = await openApp(page, { settings: ME });
@@ -9,6 +9,44 @@ test('sample invoice totals, words and no GST', async ({ page }) => {
   await expect(page.locator('.inv')).not.toContainText(/CGST|SGST|IGST|GSTIN/);
   await expect(page.locator('#taxSection')).toBeHidden();
   expect(errors).toEqual([]);
+});
+
+test('first run starts with an empty invoice', async ({ page }) => {
+  const errors = await openApp(page, { fresh: true, settings: ME });
+  expect(await total(page)).toBe('₹ 0.00');
+  await expect(page.locator('.inv .it-row')).toHaveCount(1);
+  await expect(page.locator('.inv')).not.toContainText(/Aarav|Northwind|Website redesign|Discovery/);
+  await expect(page.locator('#saveState')).toContainText('RCS-0001');
+  expect(errors).toEqual([]);
+});
+
+// The example earlier versions opened with.
+const OLD_EXAMPLE = {
+  ...SAMPLE,
+  client: { name: 'Aarav Mehta', company: 'Northwind Foods Pvt. Ltd.', address: '4th Floor, Prestige Meridian\nMG Road, Bengaluru 560001' },
+  project: { title: 'Website redesign', desc: 'Brand-led redesign of the marketing site, from research through launch.' },
+  items: [
+    { id: 'i1', desc: 'Discovery & UX research', sub: '', qty: 1, rate: 45000 },
+    { id: 'i2', desc: 'UI design — marketing website', sub: '', qty: 12, rate: 6500 },
+    { id: 'i3', desc: 'Webflow development', sub: '', qty: 1, rate: 60000 },
+  ],
+};
+
+test('an old example draft is cleared on start', async ({ page }) => {
+  await openApp(page, { settings: ME, working: { inv: OLD_EXAMPLE, dirty: false } });
+  expect(await total(page)).toBe('₹ 0.00');
+  await expect(page.locator('.inv')).not.toContainText(/Aarav|Northwind|Website redesign|Discovery/);
+});
+
+test('clearing an old example draft keeps your client and your own lines', async ({ page }) => {
+  const inv = { ...OLD_EXAMPLE, client: { name: '', company: 'Kidooza', address: 'Bengaluru' },
+    items: [...OLD_EXAMPLE.items, { id: 'mine', desc: 'Logo design', sub: '', qty: 1, rate: 15000 }] };
+  await openApp(page, { settings: ME, working: { inv, dirty: true } });
+  await expect(page.locator('.inv .it-row')).toHaveCount(1);
+  await expect(page.locator('.inv')).toContainText('Logo design');
+  await expect(page.locator('.inv')).toContainText('Kidooza');
+  await expect(page.locator('.inv')).not.toContainText(/Website redesign|Discovery/);
+  expect(await total(page)).toBe('₹ 15,000.00');
 });
 
 test('live calculation, keyboard flow and discount', async ({ page }) => {

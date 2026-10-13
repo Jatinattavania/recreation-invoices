@@ -25,7 +25,7 @@ export function openInvoice(id) {
 /** Start a blank invoice or quote. */
 export function newDocument(kind = 'invoice') {
   if (S.dirty && !confirm(`Discard unsaved changes to the current ${word(S.cur)}?`)) return;
-  S.cur = newInvoice(false, kind); S.dirty = false; persistWorking(); renderAll();
+  S.cur = newInvoice(kind); S.dirty = false; persistWorking(); renderAll();
   toast(`New ${kind} — ${peekSerial(kind)} is assigned when you save`);
   setTimeout(() => $('[data-f="client.name"]', pageFrame)?.focus(), 50);
 }

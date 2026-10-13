@@ -11,8 +11,22 @@ export const ME = {
 };
 export const UPI_QR = 'upi://pay?pa=studio@okaxis&pn=TEST%20STUDIO&mc=0000&mode=02&purpose=00';
 
-/** Open the app with a clean browser seeded with `seed` (rcs.* localStorage keys). */
-export async function openApp(page, seed = {}) {
+// The app starts empty; most tests start from this filled-in draft (₹1,83,000).
+export const SAMPLE = {
+  id: 'sample', kind: 'invoice', number: null, status: 'draft',
+  client: { name: 'Aarav Mehta', company: 'Northwind Foods Pvt. Ltd.', address: 'MG Road, Bengaluru 560001', email: '', gstin: '', logo: '' },
+  project: { title: 'Website redesign', desc: 'Redesign of the marketing site, from research to launch.' },
+  items: [
+    { id: 'i1', desc: 'UX research', sub: 'Stakeholder interviews, competitor audit, user flows', qty: 1, rate: 45000 },
+    { id: 'i2', desc: 'UI design', sub: 'Responsive screens and a Figma design system', qty: 12, rate: 6500 },
+    { id: 'i3', desc: 'Web development', sub: 'CMS setup, interactions, launch support', qty: 1, rate: 60000 },
+  ],
+};
+
+/** Open the app with a clean browser seeded with `seed` (rcs.* localStorage keys).
+    Unless the seed has saved invoices or a draft, the SAMPLE draft is open. Pass `{ fresh: true }` for a first run. */
+export async function openApp(page, { fresh = false, ...seed } = {}) {
+  if (!fresh && !seed.invoices && !seed.working) seed.working = { inv: SAMPLE, dirty: false };
   page.on('dialog', d => d.accept());
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
