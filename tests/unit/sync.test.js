@@ -8,10 +8,11 @@ const settle = async () => { for (let i = 0; i < 5; i++) await new Promise(r => 
 function fakeCloud() {
   const data = Object.fromEntries(COLLECTIONS.map(c => [c, {}])), subs = [];
   const cloud = {
-    data, fail: null, hang: false,
+    data, fail: null, hang: false, deny: false,
     backend() {
       return {
-        listen(coll, onDocs) {
+        listen(coll, onDocs, onError) {
+          if (cloud.deny) { Promise.resolve().then(() => onError(new Error('Missing or insufficient permissions.'))); return () => {}; }
           const sub = { coll, onDocs }; subs.push(sub);
           Promise.resolve().then(() => onDocs(copy(data[coll])));
           return () => subs.splice(subs.indexOf(sub), 1);
@@ -19,7 +20,7 @@ function fakeCloud() {
         async commit(ops) {
           if (cloud.hang) return new Promise(() => {});
           await Promise.resolve();
-          if (cloud.fail) throw new Error(cloud.fail);
+          if (cloud.fail || cloud.deny) throw new Error(cloud.fail || 'Missing or insufficient permissions.');
           for (const { coll, id, value } of ops) if (value == null) delete data[coll][id]; else data[coll][id] = copy(value);
           for (const coll of new Set(ops.map(o => o.coll))) subs.filter(s => s.coll === coll).forEach(s => s.onDocs(copy(data[coll])));
         },
@@ -30,7 +31,7 @@ function fakeCloud() {
 }
 
 /** A pretend browser: its own local data and sync memory. */
-function device(cloud, seed = {}) {
+function device(cloud, seed = {}, retryDelay = 5000) {
   const db = Object.fromEntries(COLLECTIONS.map(c => [c, copy(seed[c] || {})]));
   const dev = { db, saved: null, statuses: [] };
   dev.connect = () => {
@@ -42,6 +43,7 @@ function device(cloud, seed = {}) {
       backend: cloud.backend(),
       base: { load: () => dev.saved && copy(dev.saved), save: b => { dev.saved = copy(b); } },
       onStatus: s => dev.statuses.push(s),
+      retryDelay,
     });
     dev.sync.start();
     return settle();
@@ -185,5 +187,31 @@ describe('two browsers syncing through the cloud', () => {
     await a.connect();
     expect(cloud.data.invoices.i1.status).toBe('paid');
     expect(a.db.invoices.i1.status).toBe('paid');
+  });
+
+  it('refused at first (rules not published yet): keeps retrying, then syncs once allowed', async () => {
+    const cloud = fakeCloud();
+    cloud.deny = true;
+    const a = device(cloud, { invoices: { i1: inv('i1') } }, 20);
+    await a.connect();
+    expect(a.statuses.at(-1)).toBe('error');
+    cloud.deny = false;                                  // the rules get published
+    await new Promise(r => setTimeout(r, 80)); await settle();
+    expect(a.statuses.at(-1)).toBe('synced');
+    expect(cloud.data.invoices.i1).toBeTruthy();
+    a.disconnect();
+  });
+
+  it('Sync now retries straight away', async () => {
+    const cloud = fakeCloud();
+    cloud.deny = true;
+    const a = device(cloud, { clients: { c1: { id: 'c1' } } }, 60000);
+    await a.connect();
+    expect(a.statuses.at(-1)).toBe('error');
+    cloud.deny = false;
+    a.sync.flush(); await settle();
+    expect(a.statuses.at(-1)).toBe('synced');
+    expect(cloud.data.clients.c1).toEqual({ id: 'c1' });
+    a.disconnect();
   });
 });

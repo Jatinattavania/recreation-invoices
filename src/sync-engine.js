@@ -83,16 +83,41 @@ export function plan(coll, L, R, B = {}) {
  * base:    { load() → {coll: {id: hash}}, save(obj) } — kept with the local data, so a browser
  *          whose data is cleared also forgets it, and simply merges with the cloud again.
  * onStatus(state, detail): 'connecting' | 'syncing' | 'synced' | 'error'
+ * After an error (e.g. the cloud refusing access) it tries again by itself, waiting
+ * `retryDelay` at first and up to a minute between tries.
  */
-export function createSync({ local, backend, base: store, onStatus = () => {}, onApplied = () => {}, delay = 600 }) {
+export function createSync({ local, backend, base: store, onStatus = () => {}, onApplied = () => {}, delay = 600, retryDelay = 5000 }) {
   const base = store.load() || {};
   const remote = {};                      // latest cloud state per collection (from the server)
   const inflight = {};                    // coll → id → hash being uploaded
-  const timers = {};
-  let unsubs = [], pending = 0, error = '', stopped = false;
+  const timers = {}, unsubs = {};
+  const listenErr = {};                   // coll → why the cloud stopped sending it
+  let pending = 0, commitErr = '', stopped = false, retryTimer = 0, wait = retryDelay;
 
-  const status = () => onStatus(error ? 'error' : COLLECTIONS.some(c => !remote[c]) ? 'connecting' : pending ? 'syncing' : 'synced', error);
+  const error = () => commitErr || Object.values(listenErr)[0] || '';
+  const status = () => onStatus(error() ? 'error' : COLLECTIONS.some(c => !remote[c]) ? 'connecting' : pending ? 'syncing' : 'synced', error());
   const saveBase = () => store.save(base);
+  const message = e => e?.message || String(e);
+
+  function retryLater() {
+    if (stopped || retryTimer) return;
+    retryTimer = setTimeout(() => { retryTimer = 0; wait = Math.min(wait * 2, 60000); retry(); }, wait);
+  }
+  function retry() {
+    clearTimeout(retryTimer); retryTimer = 0;
+    for (const coll of Object.keys(listenErr)) listen(coll);
+    COLLECTIONS.forEach(reconcile);       // re-sends uploads that failed
+  }
+
+  // A cloud listener that hits an error stops for good, so start a fresh one to retry.
+  function listen(coll) {
+    unsubs[coll]?.();
+    unsubs[coll] = backend.listen(coll, docs => {
+      remote[coll] = docs;
+      if (coll in listenErr) { delete listenErr[coll]; if (!error()) wait = retryDelay; }
+      reconcile(coll);
+    }, e => { listenErr[coll] = message(e); status(); retryLater(); });
+  }
 
   function reconcile(coll) {
     if (stopped || !remote[coll]) return;
@@ -113,23 +138,21 @@ export function createSync({ local, backend, base: store, onStatus = () => {}, o
         if (busy[o.id] === h) delete busy[o.id];
         if (h == null) delete B[o.id]; else B[o.id] = h;
       }
-      error = ''; saveBase();
+      commitErr = ''; if (!error()) wait = retryDelay;
+      saveBase();
     }, e => {
       for (const o of ops) delete busy[o.id];
-      error = e?.message || String(e);
+      commitErr = message(e); retryLater();
     }).finally(() => { pending--; status(); });
   }
 
   return {
-    start() {
-      status();
-      unsubs = COLLECTIONS.map(coll => backend.listen(coll, docs => { remote[coll] = docs; reconcile(coll); }, e => { error = e?.message || String(e); status(); }));
-    },
+    start() { status(); COLLECTIONS.forEach(listen); },
     /** Local data in `coll` changed: upload it shortly. */
     changed(coll) { clearTimeout(timers[coll]); timers[coll] = setTimeout(() => reconcile(coll), delay); },
-    /** Upload anything waiting right now. */
-    flush() { COLLECTIONS.forEach(c => { clearTimeout(timers[c]); reconcile(c); }); },
-    stop() { stopped = true; unsubs.forEach(u => u()); unsubs = []; COLLECTIONS.forEach(c => clearTimeout(timers[c])); },
+    /** Reconnect anything that failed and upload anything waiting, right now. */
+    flush() { COLLECTIONS.forEach(c => clearTimeout(timers[c])); wait = retryDelay; retry(); },
+    stop() { stopped = true; clearTimeout(retryTimer); Object.values(unsubs).forEach(u => u()); COLLECTIONS.forEach(c => clearTimeout(timers[c])); },
     get pending() { return pending; },
   };
 }

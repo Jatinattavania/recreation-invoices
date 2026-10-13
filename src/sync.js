@@ -138,7 +138,7 @@ addEventListener('focus', () => setTimeout(() => { if (state === 'signing-in' &&
 const btn = $('#tSync'), menu = $('#syncMenu');
 const LABEL = { off: 'Sign in to sync', 'signing-in': 'Signing in…', connecting: 'Connecting…', syncing: 'Syncing…', synced: 'Synced', error: 'Sync problem', offline: 'Offline' };
 function friendly(msg) {
-  return /insufficient permissions|permission-denied/i.test(msg) ? 'The cloud refused your data. The Firestore rules need publishing (see README → Sync).' : msg;
+  return /insufficient permissions|permission-denied/i.test(msg) ? 'Firebase is refusing access. Publish the rules (Firebase console → Firestore Database → Rules), then click Sync now — it also keeps retrying by itself.' : msg;
 }
 export function render() {
   const shown = account && state !== 'off' && !navigator.onLine ? 'offline' : account ? (state === 'off' ? 'connecting' : state) : state;
