@@ -16,7 +16,7 @@ The app always runs on port **8080**. Saved data belongs to the address it was s
 
 ## Hosting
 
-Every push to `main` builds the app and publishes it to GitHub Pages (`.github/workflows/deploy.yml`). Check progress in the repository's **Actions** tab.
+Live at **https://jatinattavania.github.io/recreation-invoices/**. Every push to `main` builds the app and publishes it to GitHub Pages (`.github/workflows/deploy.yml`). Check progress in the repository's **Actions** tab.
 
 The hosted site and `localhost:8080` each keep their own saved data. To move your invoices across, use **Settings → Backups → Download a backup file** on one, then **Restore from a backup file** on the other.
 
