@@ -29,7 +29,7 @@ Click **Sign in to sync** in the toolbar and sign in with Google. Your invoices,
 - **Sign out and clear this browser** (in the sync menu) is for a shared computer: it removes the data from that browser only.
 - Anyone can sign in to the hosted site, but each person only ever sees their own data.
 
-The access rules are in `firestore.rules`. To change them, paste the file into Firebase console → Firestore Database → **Rules** and click **Publish**.
+The access rules are in `firestore.rules`. After changing them, publish with `npx firebase-tools@14 deploy --only firestore:rules` (run `npx firebase-tools@14 login` once first).
 
 ## Keeping your data safe
 
